@@ -2,19 +2,19 @@
 
 Server-authoritative Roblox tycoon conversion from cash collector template to bee pollination loop.
 
-## Required workspace structure
+## Workspace structure
 
-Place plots under `Workspace/Plots`.
-Each player plot should be named to match the player name (or your own assignment flow should rename/clone appropriately).
+`Main.server.lua` now auto-creates `Workspace/Plots` and one starter plot per player if missing, so the game is not empty on a fresh place.
+If you want custom plot layout, you can still prebuild your own `Workspace/Plots`.
 
-Inside each plot create:
+Inside each plot you can create:
 - `PollinationPoints` (Folder)
   - Children: Parts used as pollination targets.
   - Each point receives `Bloom` + `BloomRateMultiplier` NumberValues automatically.
 - `FlowerSpawnPoints` (Folder)
   - Children: Parts where `MoneyFlower` may spawn.
 
-If no points exist, `Main.server.lua` creates starter placeholders.
+If points/spawns are missing, `Main.server.lua` creates starter placeholders automatically.
 
 ## Remote events
 

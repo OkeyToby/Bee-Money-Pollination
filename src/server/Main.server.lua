@@ -19,6 +19,11 @@ local zoneService = ZoneService.new(dataService, economyService)
 local beeService = BeeService.new(dataService, upgradeService, zoneService)
 local pollinationService = PollinationService.new(economyService, dataService, upgradeService, zoneService)
 
+local PLOT_COLUMNS = 4
+local PLOT_SPACING = 56
+local PLOT_START_Z = 115
+local PLOT_BASE_SIZE = Vector3.new(40, 1, 40)
+
 local function ensureFolder(parent, name)
     local existing = parent:FindFirstChild(name)
     if existing then
@@ -155,6 +160,110 @@ local function setupBackgroundMusic()
     end
 end
 
+local function getPlotCenterForSlot(slotIndex)
+    local column = (slotIndex - 1) % PLOT_COLUMNS
+    local row = math.floor((slotIndex - 1) / PLOT_COLUMNS)
+    local startX = -((PLOT_COLUMNS - 1) * PLOT_SPACING) * 0.5
+
+    return Vector3.new(
+        startX + (column * PLOT_SPACING),
+        0,
+        PLOT_START_Z + (row * PLOT_SPACING)
+    )
+end
+
+local function getNextPlotSlot(plotsFolder)
+    local usedSlots = {}
+    for _, plot in ipairs(plotsFolder:GetChildren()) do
+        local slot = plot:GetAttribute("PlotSlot")
+        if typeof(slot) == "number" then
+            usedSlots[math.max(1, math.floor(slot))] = true
+        end
+    end
+
+    local slotIndex = 1
+    while usedSlots[slotIndex] do
+        slotIndex += 1
+    end
+
+    return slotIndex
+end
+
+local function createPlotBase(parent, basePosition)
+    local base = Instance.new("Part")
+    base.Name = "Base"
+    base.Size = PLOT_BASE_SIZE
+    base.Anchored = true
+    base.Material = Enum.Material.Grass
+    base.Color = Color3.fromRGB(84, 168, 88)
+    base.TopSurface = Enum.SurfaceType.Smooth
+    base.BottomSurface = Enum.SurfaceType.Smooth
+    base.Position = basePosition + Vector3.new(0, PLOT_BASE_SIZE.Y * 0.5, 0)
+    base.Parent = parent
+    return base
+end
+
+local function ensurePlotBase(plot)
+    local base = plot:FindFirstChild("Base")
+    if base and base:IsA("BasePart") then
+        return base
+    end
+
+    local anyBasePart = plot:FindFirstChildWhichIsA("BasePart")
+    if anyBasePart then
+        return anyBasePart
+    end
+
+    local slot = plot:GetAttribute("PlotSlot")
+    if typeof(slot) ~= "number" then
+        slot = 1
+        plot:SetAttribute("PlotSlot", slot)
+    end
+
+    return createPlotBase(plot, getPlotCenterForSlot(slot))
+end
+
+local function ensurePlayerPlot(player)
+    local plots = ensureFolder(workspace, "Plots")
+    local existing = plots:FindFirstChild(player.Name)
+    if existing then
+        if typeof(existing:GetAttribute("PlotSlot")) ~= "number" then
+            existing:SetAttribute("PlotSlot", getNextPlotSlot(plots))
+        end
+        return existing
+    end
+
+    local slotIndex = getNextPlotSlot(plots)
+    local plotCenter = getPlotCenterForSlot(slotIndex)
+
+    local plot = Instance.new("Model")
+    plot.Name = player.Name
+    plot:SetAttribute("PlotSlot", slotIndex)
+    plot.Parent = plots
+
+    local base = createPlotBase(plot, plotCenter)
+
+    local marker = Instance.new("BillboardGui")
+    marker.Name = "PlotMarker"
+    marker.Adornee = base
+    marker.Size = UDim2.fromOffset(200, 40)
+    marker.StudsOffset = Vector3.new(0, 4, 0)
+    marker.AlwaysOnTop = true
+    marker.Parent = base
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.fromScale(1, 1)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+    label.TextColor3 = Color3.fromRGB(255, 239, 148)
+    label.TextStrokeTransparency = 0.6
+    label.Text = string.format("%s Plot", player.Name)
+    label.Parent = marker
+
+    return plot
+end
+
 local function ensureLeaderstats(player)
     local profile = dataService:GetProfile(player)
     if not profile then
@@ -175,12 +284,7 @@ local function ensureLeaderstats(player)
 end
 
 local function ensurePlotFolders(player)
-    local plots = workspace:FindFirstChild("Plots")
-    if not plots then
-        return
-    end
-
-    local plot = plots:FindFirstChild(player.Name)
+    local plot = ensurePlayerPlot(player)
     if not plot then
         return
     end
@@ -188,7 +292,7 @@ local function ensurePlotFolders(player)
     local points = ensureFolder(plot, "PollinationPoints")
     local spawns = ensureFolder(plot, "FlowerSpawnPoints")
 
-    local anchorPart = plot:FindFirstChild("Base") or plot:FindFirstChildWhichIsA("BasePart")
+    local anchorPart = ensurePlotBase(plot)
     local anchorPosition = anchorPart and anchorPart.Position or Vector3.new(0, 0, 0)
 
     if #points:GetChildren() == 0 then
