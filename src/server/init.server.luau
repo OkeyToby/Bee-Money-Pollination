@@ -1,1 +1,4 @@
-print("Hello world, from server!")
+local PollinationService = require(script.Parent:WaitForChild("PollinationService"))
+
+local service = PollinationService.new()
+service:Start()
