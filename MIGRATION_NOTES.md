@@ -58,7 +58,7 @@ If none are found, fallback trees are generated server-side.
 - Requested source track: `https://github.com/OkeyToby/robloxstuff/blob/main/Biernes%20Dans.mp3`
 
 When present, the `BiernesDans` sound is cloned to `SoundService/BeeForestBackgroundMusic` and played server-side.
-If missing, script uses a raw URL fallback as best-effort.
+If missing, playback is skipped and the server logs an actionable warning.
 
 
 ## Startup image + thumbnail notes

@@ -59,7 +59,8 @@ function PollinationService:GetSpawnPart(plot, point)
 end
 
 function PollinationService:SpawnMoneyFlower(player, point)
-    local plot = point:FindFirstAncestor(player.Name)
+    local plots = workspace:FindFirstChild("Plots")
+    local plot = plots and plots:FindFirstChild(player.Name)
     local spawnPart = self:GetSpawnPart(plot, point)
 
     local flower = Instance.new("Part")
