@@ -1,0 +1,26 @@
+{
+  "name": "BeeMoneyPollination",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Modules": {
+        "$path": "ReplicatedStorage/Modules"
+      }
+    },
+    "ServerScriptService": {
+      "Main": {
+        "$path": "ServerScriptService/Main.server.lua"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "LoadingScreen": {
+          "$path": "StarterPlayerScripts/LoadingScreen.client.lua"
+        },
+        "UIHandlers": {
+          "$path": "StarterPlayerScripts/UIHandlers.client.lua"
+        }
+      }
+    }
+  }
+}

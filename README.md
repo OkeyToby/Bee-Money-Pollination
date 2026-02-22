@@ -102,3 +102,24 @@ You asked for a startup image while loading and as thumbnail.
 ### Roblox game thumbnail
 Thumbnail cannot be changed by runtime script.
 Set it in Creator Dashboard / Game Settings using the same uploaded image asset.
+
+
+## VS Code sync / overførsel
+
+Hvis du ikke kan få projektet over i VS Code, brug denne hurtige workflow:
+
+1. **Push repo til GitHub**
+   ```bash
+   git remote add origin https://github.com/OkeyToby/Bee-Money-Pollination.git
+   git push -u origin work
+   ```
+2. **Klon repo i VS Code**
+   - VS Code → *Source Control* → *Clone Repository*
+   - Indsæt repo URL og åbn mappen
+3. **(Roblox Studio ↔ VS Code)** Brug evt. Rojo for live sync
+   - Installer Rojo plugin i Roblox Studio
+   - Installer Rojo CLI lokalt
+   - Brug repoets `default.project.json` (allerede tilføjet)
+   - Kør `rojo serve` og connect fra Studio
+
+> Bemærk: `.rbxl/.rbxlx` place-filer synkroniseres ikke automatisk kun via Git. Koden i denne repo er script-kilde, og assets (models/audio/images) importeres i Roblox Studio som beskrevet ovenfor.
