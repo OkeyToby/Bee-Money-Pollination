@@ -4,21 +4,27 @@
     "$className": "DataModel",
 
     "ReplicatedStorage": {
+      "Modules": {
+        "$path": "src/modules"
+      },
       "Shared": {
         "$path": "src/shared"
       }
     },
 
     "ServerScriptService": {
-      "Server": {
-        "$path": "src/server"
+      "Main": {
+        "$path": "src/server/Main.server.lua"
       }
     },
 
     "StarterPlayer": {
       "StarterPlayerScripts": {
-        "Client": {
-          "$path": "src/client"
+        "LoadingScreen": {
+          "$path": "src/client/LoadingScreen.client.lua"
+        },
+        "UIHandlers": {
+          "$path": "src/client/UIHandlers.client.lua"
         }
       }
     },
