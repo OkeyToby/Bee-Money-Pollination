@@ -138,7 +138,9 @@ local function setupBackgroundMusic()
     else
         musicSound = Instance.new("Sound")
         musicSound.Name = "BeeForestBackgroundMusic"
-        musicSound.SoundId = "https://github.com/OkeyToby/robloxstuff/raw/main/Biernes%20Dans.mp3"
+        -- Roblox only supports uploaded audio asset IDs in production.
+        -- Keep fallback silent rather than assigning an invalid URL SoundId.
+        musicSound.SoundId = ""
     end
 
     musicSound.Name = "BeeForestBackgroundMusic"
@@ -146,7 +148,11 @@ local function setupBackgroundMusic()
     musicSound.Volume = 0.25
     musicSound.RollOffMaxDistance = 10000
     musicSound.Parent = SoundService
-    musicSound:Play()
+    if musicSound.SoundId ~= "" then
+        musicSound:Play()
+    else
+        warn("[Main] Missing background music asset. Import Sound to ReplicatedStorage/Assets/Music/BiernesDans")
+    end
 end
 
 local function ensureLeaderstats(player)
@@ -180,7 +186,10 @@ local function ensurePlotFolders(player)
     end
 
     local points = ensureFolder(plot, "PollinationPoints")
-    ensureFolder(plot, "FlowerSpawnPoints")
+    local spawns = ensureFolder(plot, "FlowerSpawnPoints")
+
+    local anchorPart = plot:FindFirstChild("Base") or plot:FindFirstChildWhichIsA("BasePart")
+    local anchorPosition = anchorPart and anchorPart.Position or Vector3.new(0, 0, 0)
 
     if #points:GetChildren() == 0 then
         for i = 1, 3 do
@@ -192,8 +201,21 @@ local function ensurePlotFolders(player)
             point.Color = Color3.fromRGB(241, 146, 255)
             point.Anchored = true
             point.CanCollide = false
-            point.Position = Vector3.new(i * 4, 2, i * 3)
+            point.Position = anchorPosition + Vector3.new(i * 4, 2, i * 3)
             point.Parent = points
+        end
+    end
+
+    if #spawns:GetChildren() == 0 then
+        for i = 1, 3 do
+            local spawn = Instance.new("Part")
+            spawn.Name = string.format("FlowerSpawn_%d", i)
+            spawn.Size = Vector3.new(1, 1, 1)
+            spawn.Transparency = 1
+            spawn.Anchored = true
+            spawn.CanCollide = false
+            spawn.Position = anchorPosition + Vector3.new(-6 + (i * 4), 2, 6)
+            spawn.Parent = spawns
         end
     end
 

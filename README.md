@@ -87,7 +87,7 @@ Recommended Roblox Studio setup:
 
 Runtime behavior:
 - `Main.server.lua` clones `ReplicatedStorage/Assets/Music/BiernesDans` into `SoundService` as `BeeForestBackgroundMusic` and starts playback.
-- If `BiernesDans` is missing, it falls back to the raw GitHub URL string (best-effort only).
+- If `BiernesDans` is missing, music stays disabled and the server logs a warning (Roblox requires uploaded audio asset IDs).
 
 
 ## Loader image + thumbnail setup
