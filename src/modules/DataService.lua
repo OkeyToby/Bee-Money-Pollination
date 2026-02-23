@@ -9,8 +9,8 @@ local PROFILE_STORE_NAME = "BeeForestPollinationProfiles_v2"
 local DEFAULT_PROFILE = {
     Coins = 0,
     ZoneLevel = 1,
-    OwnedBees = { "BasicPollinator" },
-    EquippedBees = { "BasicPollinator" },
+    OwnedBees = { "BasicPollinator", "SwiftWing" },
+    EquippedBees = { "BasicPollinator", "SwiftWing" },
     Upgrades = {
         MoreFlowers = 0,
         SoilQuality = 0,
@@ -34,6 +34,15 @@ local function deepCopy(value)
     return result
 end
 
+local function hasValue(list, value)
+    for _, candidate in ipairs(list) do
+        if candidate == value then
+            return true
+        end
+    end
+    return false
+end
+
 local function mergeDefaults(defaults, loaded)
     local profile = deepCopy(defaults)
     if type(loaded) ~= "table" then
@@ -51,10 +60,21 @@ local function mergeDefaults(defaults, loaded)
     end
 
     if type(profile.OwnedBees) ~= "table" then
-        profile.OwnedBees = { "BasicPollinator" }
+        profile.OwnedBees = { "BasicPollinator", "SwiftWing" }
     end
     if type(profile.EquippedBees) ~= "table" or #profile.EquippedBees == 0 then
-        profile.EquippedBees = { "BasicPollinator" }
+        profile.EquippedBees = { "BasicPollinator", "SwiftWing" }
+    end
+
+    if not hasValue(profile.OwnedBees, "BasicPollinator") then
+        table.insert(profile.OwnedBees, "BasicPollinator")
+    end
+    if not hasValue(profile.OwnedBees, "SwiftWing") then
+        table.insert(profile.OwnedBees, "SwiftWing")
+    end
+
+    if #profile.EquippedBees == 1 and profile.EquippedBees[1] == "BasicPollinator" and hasValue(profile.OwnedBees, "SwiftWing") then
+        table.insert(profile.EquippedBees, "SwiftWing")
     end
 
     return profile

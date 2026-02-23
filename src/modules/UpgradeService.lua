@@ -35,7 +35,7 @@ function UpgradeService:GetUpgradeCost(player, upgradeId)
 end
 
 function UpgradeService:GetHiveCapacity(player)
-    return 1 + self:GetUpgradeLevel(player, "HiveCapacity")
+    return 2 + self:GetUpgradeLevel(player, "HiveCapacity")
 end
 
 function UpgradeService:GetSoilMultiplier(player)

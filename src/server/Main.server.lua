@@ -21,8 +21,9 @@ local pollinationService = PollinationService.new(economyService, dataService, u
 
 local PLOT_COLUMNS = 4
 local PLOT_SPACING = 56
-local PLOT_START_Z = 115
+local PLOT_START_Z = 28
 local PLOT_BASE_SIZE = Vector3.new(40, 1, 40)
+local UPGRADE_IDS = { "MoreFlowers", "SoilQuality", "HiveCapacity", "PollenBoost" }
 
 local function ensureFolder(parent, name)
     local existing = parent:FindFirstChild(name)
@@ -292,9 +293,19 @@ local function ensurePlotFolders(player)
 
     local anchorPart = ensurePlotBase(plot)
     local anchorPosition = anchorPart and anchorPart.Position or Vector3.new(0, 0, 0)
+    local pointOffsets = {
+        Vector3.new(-7, 2, -5),
+        Vector3.new(0, 2, 6),
+        Vector3.new(7, 2, -2),
+    }
+    local spawnOffsets = {
+        Vector3.new(-8, 2, 5),
+        Vector3.new(0, 2, 9),
+        Vector3.new(8, 2, 5),
+    }
 
     if #points:GetChildren() == 0 then
-        for i = 1, 3 do
+        for i, offset in ipairs(pointOffsets) do
             local point = Instance.new("Part")
             point.Name = string.format("PollinationPoint_%d", i)
             point.Size = Vector3.new(2, 1, 2)
@@ -303,20 +314,20 @@ local function ensurePlotFolders(player)
             point.Color = Color3.fromRGB(241, 146, 255)
             point.Anchored = true
             point.CanCollide = false
-            point.Position = anchorPosition + Vector3.new(i * 4, 2, i * 3)
+            point.Position = anchorPosition + offset
             point.Parent = points
         end
     end
 
     if #spawns:GetChildren() == 0 then
-        for i = 1, 3 do
+        for i, offset in ipairs(spawnOffsets) do
             local spawn = Instance.new("Part")
             spawn.Name = string.format("FlowerSpawn_%d", i)
             spawn.Size = Vector3.new(1, 1, 1)
             spawn.Transparency = 1
             spawn.Anchored = true
             spawn.CanCollide = false
-            spawn.Position = anchorPosition + Vector3.new(-6 + (i * 4), 2, 6)
+            spawn.Position = anchorPosition + offset
             spawn.Parent = spawns
         end
     end
@@ -330,6 +341,18 @@ local buyUpgradeRemote = ensureRemote(remotes, "BuyUpgrade")
 local equipBeeRemote = ensureRemote(remotes, "EquipBee")
 local unlockZoneRemote = ensureRemote(remotes, "UnlockZone")
 local syncStateRemote = ensureRemote(remotes, "SyncState")
+
+local function getUpgradeState(player)
+    local costs = {}
+    local levels = {}
+
+    for _, upgradeId in ipairs(UPGRADE_IDS) do
+        levels[upgradeId] = upgradeService:GetUpgradeLevel(player, upgradeId)
+        costs[upgradeId] = upgradeService:GetUpgradeCost(player, upgradeId) or 0
+    end
+
+    return levels, costs
+end
 
 local function syncPlayer(player)
     local profile = dataService:GetProfile(player)
@@ -349,18 +372,37 @@ local function syncPlayer(player)
         end
     end
 
+    local upgradeLevels, upgradeCosts = getUpgradeState(player)
+
     syncStateRemote:FireClient(player, {
         coins = profile.Coins,
         zoneLevel = profile.ZoneLevel,
-        upgrades = profile.Upgrades,
+        upgrades = upgradeLevels,
+        upgradeLevels = upgradeLevels,
+        upgradeCosts = upgradeCosts,
         ownedBees = profile.OwnedBees,
         equippedBees = profile.EquippedBees,
         hiveCapacity = upgradeService:GetHiveCapacity(player),
+        bloomSummary = pollinationService:GetBloomSummary(player),
     })
 end
 
 collectFlowerRemote.OnServerEvent:Connect(function(player, flower)
-    pollinationService:TryCollectFlower(player, flower)
+    local success, amount = pollinationService:TryCollectFlower(player, flower)
+    syncStateRemote:FireClient(player, {
+        success = success,
+        action = "CollectFlower",
+        payload = { amount = amount or 0 },
+    })
+    syncPlayer(player)
+end)
+
+pollinationService:SetFlowerCollectedHandler(function(player, amount)
+    syncStateRemote:FireClient(player, {
+        success = true,
+        action = "CollectFlower",
+        payload = { amount = amount or 0 },
+    })
     syncPlayer(player)
 end)
 
@@ -405,6 +447,14 @@ setupForestTheme()
 setupBackgroundMusic()
 dataService:BindLifecycle()
 beeService:Start(pollinationService)
+task.spawn(function()
+    while true do
+        task.wait(1)
+        for _, player in ipairs(Players:GetPlayers()) do
+            syncPlayer(player)
+        end
+    end
+end)
 
 for _, player in ipairs(Players:GetPlayers()) do
     onPlayerAdded(player)

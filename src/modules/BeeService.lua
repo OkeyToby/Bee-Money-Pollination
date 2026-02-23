@@ -287,7 +287,13 @@ function BeeService:GetPollinationPoints(player)
         return {}
     end
 
-    local allPoints = pointsFolder:GetChildren()
+    local allPoints = {}
+    for _, child in ipairs(pointsFolder:GetChildren()) do
+        if child:IsA("BasePart") then
+            table.insert(allPoints, child)
+        end
+    end
+
     local unlocked = self._upgradeService:GetUnlockedFlowerCount(player)
     local result = {}
 
