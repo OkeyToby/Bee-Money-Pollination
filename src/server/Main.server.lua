@@ -80,25 +80,62 @@ local function createFallbackForest(forestFolder)
         return
     end
 
-    for i = 1, 20 do
+    for i = 1, 28 do
+        local clusterCenter = Vector3.new(math.random(-145, 145), 0, math.random(-145, 145))
+        local trunkHeight = math.random(8, 13)
+        local trunkWidth = 1.1 + math.random() * 0.5
+
         local trunk = Instance.new("Part")
         trunk.Name = "TreeTrunk"
-        trunk.Size = Vector3.new(1.4, 9, 1.4)
+        trunk.Size = Vector3.new(trunkWidth, trunkHeight, trunkWidth)
         trunk.Anchored = true
-        trunk.Color = Color3.fromRGB(114, 78, 46)
+        trunk.Color = Color3.fromRGB(125, 86, 56)
         trunk.Material = Enum.Material.Wood
-        trunk.Position = Vector3.new(math.random(-140, 140), 4.5, math.random(-140, 140))
+        trunk.Position = clusterCenter + Vector3.new(0, trunkHeight * 0.5, 0)
         trunk.Parent = forestFolder
 
-        local crown = Instance.new("Part")
-        crown.Name = "TreeCrown"
-        crown.Shape = Enum.PartType.Ball
-        crown.Size = Vector3.new(8, 7, 8)
-        crown.Anchored = true
-        crown.Material = Enum.Material.Grass
-        crown.Color = Color3.fromRGB(63, 133, 59)
-        crown.Position = trunk.Position + Vector3.new(0, 7.5, 0)
-        crown.Parent = forestFolder
+        local crownHeights = { 0.45, 0.7, 0.95 }
+        for index, heightFactor in ipairs(crownHeights) do
+            local crown = Instance.new("Part")
+            crown.Name = string.format("TreeCrown_%d", index)
+            crown.Shape = Enum.PartType.Ball
+            crown.Size = Vector3.new(6.5, 5.5, 6.5) + Vector3.new(index * 0.8, index * 0.8, index * 0.8)
+            crown.Anchored = true
+            crown.Material = Enum.Material.Grass
+            crown.Color = if index % 2 == 0
+                then Color3.fromRGB(96, 173, 95)
+                else Color3.fromRGB(76, 154, 82)
+            crown.Position = trunk.Position + Vector3.new(0, trunkHeight * heightFactor + 1.8, 0)
+            crown.Parent = forestFolder
+        end
+
+        if i % 3 == 0 then
+            local stone = Instance.new("Part")
+            stone.Name = "ForestStone"
+            stone.Shape = Enum.PartType.Ball
+            stone.Size = Vector3.new(1.4, 1, 1.4) + Vector3.new(math.random() * 0.8, 0, math.random() * 0.8)
+            stone.Anchored = true
+            stone.Material = Enum.Material.Slate
+            stone.Color = Color3.fromRGB(124, 133, 130)
+            stone.Position = clusterCenter + Vector3.new(math.random(-6, 6), 0.5, math.random(-6, 6))
+            stone.Parent = forestFolder
+        end
+    end
+
+    for i = 1, 34 do
+        local bloom = Instance.new("Part")
+        bloom.Name = "GroundBloom"
+        bloom.Shape = Enum.PartType.Cylinder
+        bloom.Size = Vector3.new(0.08, 0.85 + math.random() * 0.5, 0.85 + math.random() * 0.5)
+        bloom.Anchored = true
+        bloom.CanCollide = false
+        bloom.Material = Enum.Material.Neon
+        bloom.Color = if i % 2 == 0
+            then Color3.fromRGB(255, 177, 211)
+            else Color3.fromRGB(255, 226, 146)
+        bloom.Orientation = Vector3.new(0, math.random(0, 360), 90)
+        bloom.Position = Vector3.new(math.random(-145, 145), 0.12, math.random(-145, 145))
+        bloom.Parent = forestFolder
     end
 end
 
