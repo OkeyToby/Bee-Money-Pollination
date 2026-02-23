@@ -56,11 +56,12 @@
         "$properties": {
           "Anchored": true,
           "Color": [
-            0.38823,
-            0.37254,
-            0.38823
+            0.33333,
+            0.4902,
+            0.27451
           ],
           "Locked": true,
+          "Material": "Grass",
           "Position": [
             0,
             -10,
@@ -77,14 +78,71 @@
     "Lighting": {
       "$properties": {
         "Ambient": [
-          0,
-          0,
-          0
+          0.11765,
+          0.12941,
+          0.09804
         ],
-        "Brightness": 2,
+        "Brightness": 2.35,
+        "ClockTime": 15.2,
+        "EnvironmentDiffuseScale": 0.35,
+        "EnvironmentSpecularScale": 0.5,
+        "ExposureCompensation": 0.08,
+        "GeographicLatitude": 35,
         "GlobalShadows": true,
+        "OutdoorAmbient": [
+          0.36078,
+          0.40392,
+          0.31373
+        ],
         "Outlines": false,
-        "Technology": "Voxel"
+        "Technology": "Future"
+      },
+      "Atmosphere": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Color": [
+            0.78431,
+            0.88235,
+            1
+          ],
+          "Decay": [
+            0.56863,
+            0.66275,
+            0.75686
+          ],
+          "Density": 0.3,
+          "Glare": 0.05,
+          "Haze": 1.15,
+          "Offset": 0.25
+        }
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.42,
+          "Size": 26,
+          "Threshold": 1.15
+        }
+      },
+      "ColorCorrection": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Brightness": 0.03,
+          "Contrast": 0.08,
+          "Saturation": 0.12,
+          "TintColor": [
+            1,
+            0.98039,
+            0.92157
+          ]
+        }
+      },
+      "SunRays": {
+        "$className": "SunRaysEffect",
+        "$properties": {
+          "Intensity": 0.06,
+          "Spread": 0.82
+        }
       }
     },
     "SoundService": {

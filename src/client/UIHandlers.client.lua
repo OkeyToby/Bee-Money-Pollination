@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -207,6 +208,36 @@ local function setFeedback(text, color)
     end
 end
 
+local function showCoinPopup(amount)
+    local popup = Instance.new("TextLabel")
+    popup.AnchorPoint = Vector2.new(0.5, 1)
+    popup.Position = UDim2.fromScale(0.5, 0.84)
+    popup.Size = UDim2.fromOffset(240, 54)
+    popup.BackgroundTransparency = 1
+    popup.Font = Enum.Font.GothamBlack
+    popup.TextScaled = true
+    popup.TextStrokeTransparency = 0.5
+    popup.TextColor3 = Color3.fromRGB(255, 242, 152)
+    popup.Text = string.format("+%s Coins", formatNumber(amount))
+    popup.Parent = screenGui
+
+    local travelTween = TweenService:Create(
+        popup,
+        TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        {
+            Position = popup.Position - UDim2.fromOffset(0, 70),
+            TextTransparency = 1,
+            TextStrokeTransparency = 1,
+        }
+    )
+    travelTween:Play()
+    travelTween.Completed:Connect(function()
+        if popup and popup.Parent then
+            popup:Destroy()
+        end
+    end)
+end
+
 local function hasOwnedBee(beeId)
     for _, ownedId in ipairs(state.ownedBees) do
         if ownedId == beeId then
@@ -349,6 +380,9 @@ syncState.OnClientEvent:Connect(function(payload)
         local amount = payload.payload and payload.payload.amount or 0
         if payload.success then
             setFeedback(string.format("Collected +%s Coins", formatNumber(amount)), Color3.fromRGB(168, 255, 168))
+            if amount > 0 then
+                showCoinPopup(amount)
+            end
         else
             setFeedback("Could not collect that flower.", Color3.fromRGB(255, 177, 177))
         end

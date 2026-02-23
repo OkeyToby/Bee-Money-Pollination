@@ -8,6 +8,12 @@ local BLOOM_TARGET = 60
 local MAX_ACTIVE_FLOWERS_PER_PLAYER = 6
 local POINT_BASE_COLOR = Color3.fromRGB(186, 110, 220)
 local POINT_READY_COLOR = Color3.fromRGB(255, 222, 96)
+local PETAL_COLORS = {
+    Color3.fromRGB(255, 164, 201),
+    Color3.fromRGB(255, 210, 120),
+    Color3.fromRGB(186, 145, 255),
+    Color3.fromRGB(144, 222, 163),
+}
 
 function PollinationService.new(economyService, dataService, upgradeService, zoneService)
     local self = setmetatable({}, PollinationService)
@@ -156,6 +162,81 @@ function PollinationService:GetSpawnPart(plot, point)
     return point
 end
 
+function PollinationService:GetFlowerPosition(flower)
+    if flower:IsA("Model") then
+        local primary = flower.PrimaryPart or flower:FindFirstChild("Core") or flower:FindFirstChildWhichIsA("BasePart")
+        if primary and primary:IsA("BasePart") then
+            return primary.Position
+        end
+        return nil
+    end
+
+    if flower:IsA("BasePart") then
+        return flower.Position
+    end
+
+    return nil
+end
+
+function PollinationService:CreateMoneyFlowerModel(spawnPart)
+    local flowerModel = Instance.new("Model")
+    flowerModel.Name = "MoneyFlower"
+
+    local stem = Instance.new("Part")
+    stem.Name = "Stem"
+    stem.Size = Vector3.new(0.38, 2.3, 0.38)
+    stem.Material = Enum.Material.Grass
+    stem.Color = Color3.fromRGB(89, 170, 85)
+    stem.Anchored = true
+    stem.CanCollide = false
+    stem.Position = spawnPart.Position + Vector3.new(0, 1.15, 0)
+    stem.Parent = flowerModel
+
+    local core = Instance.new("Part")
+    core.Name = "Core"
+    core.Shape = Enum.PartType.Ball
+    core.Size = Vector3.new(1, 1, 1)
+    core.Material = Enum.Material.Neon
+    core.Color = Color3.fromRGB(255, 219, 94)
+    core.Anchored = true
+    core.CanCollide = false
+    core.Position = stem.Position + Vector3.new(0, 1.15, 0)
+    core.Parent = flowerModel
+
+    local petalCount = 6
+    for i = 1, petalCount do
+        local angle = ((i - 1) / petalCount) * math.pi * 2
+        local petal = Instance.new("Part")
+        petal.Name = string.format("Petal_%d", i)
+        petal.Shape = Enum.PartType.Ball
+        petal.Size = Vector3.new(0.9, 0.9, 0.9)
+        petal.Material = Enum.Material.SmoothPlastic
+        petal.Color = PETAL_COLORS[((i - 1) % #PETAL_COLORS) + 1]
+        petal.Anchored = true
+        petal.CanCollide = false
+        petal.Position = core.Position + Vector3.new(math.cos(angle) * 0.95, 0.06, math.sin(angle) * 0.95)
+        petal.Parent = flowerModel
+    end
+
+    local leafA = Instance.new("Part")
+    leafA.Name = "LeafA"
+    leafA.Size = Vector3.new(0.6, 0.18, 0.95)
+    leafA.Material = Enum.Material.Grass
+    leafA.Color = Color3.fromRGB(88, 161, 83)
+    leafA.Anchored = true
+    leafA.CanCollide = false
+    leafA.Position = stem.Position + Vector3.new(0.35, -0.3, 0.3)
+    leafA.Parent = flowerModel
+
+    local leafB = leafA:Clone()
+    leafB.Name = "LeafB"
+    leafB.Position = stem.Position + Vector3.new(-0.35, 0.05, -0.3)
+    leafB.Parent = flowerModel
+
+    flowerModel.PrimaryPart = core
+    return flowerModel, core
+end
+
 function PollinationService:SpawnMoneyFlower(player, point)
     if self:GetActiveFlowerCount(player) >= MAX_ACTIVE_FLOWERS_PER_PLAYER then
         return
@@ -165,15 +246,8 @@ function PollinationService:SpawnMoneyFlower(player, point)
     local plot = plots and plots:FindFirstChild(player.Name)
     local spawnPart = self:GetSpawnPart(plot, point)
 
-    local flower = Instance.new("Part")
-    flower.Name = "MoneyFlower"
-    flower.Shape = Enum.PartType.Ball
-    flower.Size = Vector3.new(1.8, 1.8, 1.8)
-    flower.Material = Enum.Material.Neon
-    flower.Color = Color3.fromRGB(255, 212, 90)
-    flower.Anchored = true
-    flower.CanCollide = false
-    flower.CFrame = spawnPart.CFrame + Vector3.new(0, 2, 0)
+    local flower, core = self:CreateMoneyFlowerModel(spawnPart)
+    flower:SetAttribute("OwnerUserId", player.UserId)
     flower.Parent = self._flowerFolder
 
     local valueObj = Instance.new("IntValue")
@@ -192,14 +266,14 @@ function PollinationService:SpawnMoneyFlower(player, point)
         NumberSequenceKeypoint.new(1, 0),
     })
     sparkles.Color = ColorSequence.new(Color3.fromRGB(255, 235, 150))
-    sparkles.Parent = flower
+    sparkles.Parent = core
 
     local valueBillboard = Instance.new("BillboardGui")
     valueBillboard.Name = "ValueBillboard"
     valueBillboard.Size = UDim2.fromOffset(120, 30)
     valueBillboard.StudsOffset = Vector3.new(0, 2.1, 0)
     valueBillboard.AlwaysOnTop = true
-    valueBillboard.Parent = flower
+    valueBillboard.Parent = core
 
     local valueLabel = Instance.new("TextLabel")
     valueLabel.Size = UDim2.fromScale(1, 1)
@@ -218,10 +292,9 @@ function PollinationService:SpawnMoneyFlower(player, point)
     prompt.HoldDuration = 0.15
     prompt.MaxActivationDistance = 12
     prompt.RequiresLineOfSight = false
-    prompt.Parent = flower
+    prompt.Parent = core
 
     self._flowerOwners[flower] = player.UserId
-    flower:SetAttribute("OwnerUserId", player.UserId)
 
     prompt.Triggered:Connect(function(triggeringPlayer)
         local success, amount = self:TryCollectFlower(triggeringPlayer, flower)
@@ -290,7 +363,12 @@ function PollinationService:TryCollectFlower(player, flower)
         return false, 0
     end
 
-    if (root.Position - flower.Position).Magnitude > 15 then
+    local flowerPosition = self:GetFlowerPosition(flower)
+    if not flowerPosition then
+        return false, 0
+    end
+
+    if (root.Position - flowerPosition).Magnitude > 15 then
         return false, 0
     end
 
@@ -300,6 +378,27 @@ function PollinationService:TryCollectFlower(player, flower)
     if amount > 0 then
         self._economyService:AddCoins(player, amount, "MoneyFlower")
     end
+
+    local burstPart = Instance.new("Part")
+    burstPart.Name = "CollectBurst"
+    burstPart.Size = Vector3.new(0.2, 0.2, 0.2)
+    burstPart.Transparency = 1
+    burstPart.Anchored = true
+    burstPart.CanCollide = false
+    burstPart.Position = flowerPosition + Vector3.new(0, 0.4, 0)
+    burstPart.Parent = workspace
+
+    local burst = Instance.new("ParticleEmitter")
+    burst.Name = "CoinBurst"
+    burst.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+    burst.Color = ColorSequence.new(Color3.fromRGB(255, 236, 138))
+    burst.Lifetime = NumberRange.new(0.25, 0.5)
+    burst.Speed = NumberRange.new(6, 10)
+    burst.SpreadAngle = Vector2.new(180, 180)
+    burst.Rate = 0
+    burst.Parent = burstPart
+    burst:Emit(18)
+    Debris:AddItem(burstPart, 0.7)
 
     self._flowerOwners[flower] = nil
     flower:Destroy()
