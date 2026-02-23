@@ -2,12 +2,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local remotes = ReplicatedStorage:WaitForChild("Remotes")
-
-local buyUpgrade = remotes:WaitForChild("BuyUpgrade")
-local equipBee = remotes:WaitForChild("EquipBee")
-local unlockZone = remotes:WaitForChild("UnlockZone")
-local syncState = remotes:WaitForChild("SyncState")
 
 local state = {
     ownedBees = {},
@@ -47,6 +41,25 @@ feedbackLabel.TextXAlignment = Enum.TextXAlignment.Left
 feedbackLabel.Text = ""
 feedbackLabel.Parent = screenGui
 
+local function waitForRemote(remotes: Folder?, remoteName: string): RemoteEvent?
+    if not remotes then
+        return nil
+    end
+
+    local remote = remotes:WaitForChild(remoteName, 10)
+    if remote and remote:IsA("RemoteEvent") then
+        return remote
+    end
+
+    return nil
+end
+
+local remotes = ReplicatedStorage:WaitForChild("Remotes", 20)
+local buyUpgrade = waitForRemote(remotes, "BuyUpgrade")
+local equipBee = waitForRemote(remotes, "EquipBee")
+local unlockZone = waitForRemote(remotes, "UnlockZone")
+local syncState = waitForRemote(remotes, "SyncState")
+
 local function makeButton(text, y)
     local button = Instance.new("TextButton")
     button.Size = UDim2.fromOffset(200, 34)
@@ -70,6 +83,12 @@ local upgradeButtons = {
     HiveCapacity = makeButton("Upgrade HiveCapacity", 372),
     PollenBoost = makeButton("Upgrade PollenBoost", 412),
 }
+
+if not (buyUpgrade and equipBee and unlockZone and syncState) then
+    warn("[UIHandlers] Missing one or more remotes after timeout.")
+    feedbackLabel.Text = "Server remotes missing. Rejoin or check server errors."
+    return
+end
 
 local function tryEquipBee(beeId)
     local equipped = table.clone(state.equippedBees)

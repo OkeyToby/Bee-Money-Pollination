@@ -4,8 +4,6 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-local remotes = ReplicatedStorage:WaitForChild("Remotes")
-local syncState = remotes:WaitForChild("SyncState")
 
 local function getLoaderImageId()
     local assets = ReplicatedStorage:FindFirstChild("Assets")
@@ -17,6 +15,20 @@ local function getLoaderImageId()
     end
 
     return ""
+end
+
+local function waitForSyncStateRemote(): RemoteEvent?
+	local remotes = ReplicatedStorage:WaitForChild("Remotes", 20)
+	if not remotes then
+		return nil
+	end
+
+	local syncState = remotes:WaitForChild("SyncState", 10)
+	if syncState and syncState:IsA("RemoteEvent") then
+		return syncState
+	end
+
+	return nil
 end
 
 local gui = Instance.new("ScreenGui")
@@ -93,10 +105,16 @@ local function dismissLoader()
     end)
 end
 
-syncState.OnClientEvent:Connect(function(payload)
-    if type(payload) == "table" and payload.coins ~= nil then
-        dismissLoader()
-    end
-end)
+local syncState = waitForSyncStateRemote()
+if syncState then
+	syncState.OnClientEvent:Connect(function(payload)
+		if type(payload) == "table" and payload.coins ~= nil then
+			dismissLoader()
+		end
+	end)
+else
+	warn("[LoadingScreen] Missing ReplicatedStorage.Remotes.SyncState after timeout.")
+	subtitle.Text = "Server connection timeout. Retrying..."
+end
 
 task.delay(8, dismissLoader)

@@ -7,6 +7,24 @@
       "Modules": {
         "$path": "src/modules"
       },
+      "Remotes": {
+        "$className": "Folder",
+        "CollectFlower": {
+          "$className": "RemoteEvent"
+        },
+        "BuyUpgrade": {
+          "$className": "RemoteEvent"
+        },
+        "EquipBee": {
+          "$className": "RemoteEvent"
+        },
+        "UnlockZone": {
+          "$className": "RemoteEvent"
+        },
+        "SyncState": {
+          "$className": "RemoteEvent"
+        }
+      },
       "Shared": {
         "$path": "src/shared"
       }
