@@ -26,10 +26,6 @@ function EconomyService:AddCoins(player, amount, reason)
     profile.Coins += rounded
     profile.LifetimeCoins += rounded
 
-    if reason then
-        print(string.format("[Economy] %s +%d (%s)", player.Name, rounded, reason))
-    end
-
     return true, profile.Coins
 end
 

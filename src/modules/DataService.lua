@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
-local RunService = game:GetService("RunService")
 
 local DataService = {}
 DataService.__index = DataService
@@ -73,16 +72,6 @@ function DataService.new()
 
     if success then
         self._profileStore = profileStoreOrError
-    else
-        local reason = tostring(profileStoreOrError)
-        local message = string.format(
-            "[DataService] DataStore unavailable, using in-memory profiles for this server: %s",
-            reason
-        )
-
-        if not RunService:IsStudio() then
-            warn(message)
-        end
     end
 
     return self
