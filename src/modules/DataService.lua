@@ -80,9 +80,7 @@ function DataService.new()
             reason
         )
 
-        if RunService:IsStudio() and string.find(string.lower(reason), "publish this place", 1, true) then
-            print(message)
-        else
+        if not RunService:IsStudio() then
             warn(message)
         end
     end

@@ -156,13 +156,8 @@ local function setupBackgroundMusic()
     musicSound.Parent = SoundService
     if musicSound.SoundId ~= "" then
         musicSound:Play()
-    else
-        local message = "[Main] Missing background music asset. Import Sound to ReplicatedStorage/Assets/Music/BiernesDans"
-        if RunService:IsStudio() then
-            print(message)
-        else
-            warn(message)
-        end
+    elseif not RunService:IsStudio() then
+        warn("[Main] Missing background music asset. Import Sound to ReplicatedStorage/Assets/Music/BiernesDans")
     end
 end
 
