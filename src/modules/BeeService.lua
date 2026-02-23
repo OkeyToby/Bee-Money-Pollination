@@ -43,6 +43,29 @@ local function getAssetsFolder()
     return bees
 end
 
+local function getBuzzSoundTemplate()
+    local assets = ReplicatedStorage:FindFirstChild("Assets")
+    if not assets then
+        return nil
+    end
+
+    local direct = assets:FindFirstChild("BeeBuzz")
+    if direct and direct:IsA("Sound") and direct.SoundId ~= "" then
+        return direct
+    end
+
+    local sfxFolders = { "SFX", "Sounds", "Audio" }
+    for _, folderName in ipairs(sfxFolders) do
+        local folder = assets:FindFirstChild(folderName)
+        local sound = folder and folder:FindFirstChild("BeeBuzz")
+        if sound and sound:IsA("Sound") and sound.SoundId ~= "" then
+            return sound
+        end
+    end
+
+    return nil
+end
+
 local function setModelPrimaryPart(model)
     if model.PrimaryPart then
         return model.PrimaryPart
@@ -178,13 +201,17 @@ function BeeService:CreateBeeVisual(player, beeId, index)
 
     local attachParent = visual:IsA("Model") and (visual.PrimaryPart or setModelPrimaryPart(visual)) or visual
     if attachParent then
-        local sound = Instance.new("Sound")
-        sound.Name = "Buzz"
-        sound.SoundId = "rbxassetid://9118828562"
-        sound.Volume = 0.2
-        sound.Looped = true
-        sound.Parent = attachParent
-        sound:Play()
+        local buzzTemplate = getBuzzSoundTemplate()
+        if buzzTemplate then
+            local sound = buzzTemplate:Clone()
+            sound.Name = "Buzz"
+            sound.Looped = true
+            if sound.Volume <= 0 then
+                sound.Volume = 0.2
+            end
+            sound.Parent = attachParent
+            sound:Play()
+        end
 
         local pollen = Instance.new("ParticleEmitter")
         pollen.Name = "Pollen"

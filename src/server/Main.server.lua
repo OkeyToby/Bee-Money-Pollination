@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local SoundService = game:GetService("SoundService")
 
@@ -156,7 +157,12 @@ local function setupBackgroundMusic()
     if musicSound.SoundId ~= "" then
         musicSound:Play()
     else
-        warn("[Main] Missing background music asset. Import Sound to ReplicatedStorage/Assets/Music/BiernesDans")
+        local message = "[Main] Missing background music asset. Import Sound to ReplicatedStorage/Assets/Music/BiernesDans"
+        if RunService:IsStudio() then
+            print(message)
+        else
+            warn(message)
+        end
     end
 end
 
