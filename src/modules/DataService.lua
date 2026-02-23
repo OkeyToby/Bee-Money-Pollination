@@ -4,7 +4,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local DataService = {}
 DataService.__index = DataService
 
-local PROFILE_STORE = DataStoreService:GetDataStore("BeeForestPollinationProfiles_v2")
+local PROFILE_STORE_NAME = "BeeForestPollinationProfiles_v2"
 
 local DEFAULT_PROFILE = {
     Coins = 0,
@@ -63,6 +63,19 @@ end
 function DataService.new()
     local self = setmetatable({}, DataService)
     self._profiles = {}
+    self._memoryProfiles = {}
+    self._profileStore = nil
+
+    local success, profileStoreOrError = pcall(function()
+        return DataStoreService:GetDataStore(PROFILE_STORE_NAME)
+    end)
+
+    if success then
+        self._profileStore = profileStoreOrError
+    else
+        warn("[DataService] DataStore unavailable, using in-memory profiles for this server:", profileStoreOrError)
+    end
+
     return self
 end
 
@@ -72,16 +85,25 @@ end
 
 function DataService:LoadProfile(player)
     local key = string.format("user_%d", player.UserId)
-    local success, loaded = pcall(function()
-        return PROFILE_STORE:GetAsync(key)
-    end)
+    local loaded = nil
 
-    if not success then
-        warn("[DataService] Load failed", player.UserId, loaded)
+    if self._profileStore then
+        local success, result = pcall(function()
+            return self._profileStore:GetAsync(key)
+        end)
+
+        if success then
+            loaded = result
+        else
+            warn("[DataService] Load failed", player.UserId, result)
+        end
+    else
+        loaded = self._memoryProfiles[key]
     end
 
-    local profile = mergeDefaults(DEFAULT_PROFILE, loaded)
+    local profile = mergeDefaults(DEFAULT_PROFILE, deepCopy(loaded))
     self._profiles[player] = profile
+    self._memoryProfiles[key] = deepCopy(profile)
     return profile
 end
 
@@ -92,12 +114,16 @@ function DataService:SaveProfile(player)
     end
 
     local key = string.format("user_%d", player.UserId)
-    local success, err = pcall(function()
-        PROFILE_STORE:SetAsync(key, profile)
-    end)
+    self._memoryProfiles[key] = deepCopy(profile)
 
-    if not success then
-        warn("[DataService] Save failed", player.UserId, err)
+    if self._profileStore then
+        local success, err = pcall(function()
+            self._profileStore:SetAsync(key, profile)
+        end)
+
+        if not success then
+            warn("[DataService] Save failed", player.UserId, err)
+        end
     end
 end
 
